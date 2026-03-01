@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>kanekiq development</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <div class="stage">
+        <section class="terminal terminal--hidden" aria-label="Terminal build screen">
+        <header class="terminal__header">
+          <div class="terminal__controls" aria-hidden="true">
+            <span class="terminal__dot terminal__dot--red"></span>
+            <span class="terminal__dot terminal__dot--yellow"></span>
+            <span class="terminal__dot terminal__dot--green"></span>
+          </div>
+          <span class="terminal__title">kanekiq — terminal</span>
+        </header>
+
+        <div class="terminal__body">
+          <div class="line line--command">
+            <span class="prompt">~</span>
+            <div class="command-field">
+              <span class="command-ghost" aria-hidden="true">npm run build</span>
+              <span class="command-typed" id="command-typed" aria-hidden="true"></span>
+              <label class="sr-only" for="command-input">Команда терминала</label>
+              <input
+                id="command-input"
+                class="command-input"
+                type="text"
+                autocomplete="off"
+                spellcheck="false"
+                aria-describedby="command-hint"
+              />
+            </div>
+          </div>
+          <div class="hint" id="command-hint">Введите команду и нажмите Enter.</div>
+
+          <div class="log" id="log" aria-live="polite"></div>
+
+          <div class="progress" id="progress">
+            <div class="progress__label">
+              <span>PROGRESS</span>
+              <span id="progress-value">0%</span>
+            </div>
+            <div class="progress__bar" aria-hidden="true">
+              <div class="progress__fill" id="progress-fill"></div>
+            </div>
+            <div class="progress__footer" id="progress-footer">Processing 0/9...</div>
+          </div>
+        </div>
+        </section>
+
+        <section class="profile profile--hidden" aria-label="About kanekiq">
+        <div class="profile__card">
+          <button class="open-terminal-btn" id="open-terminal-btn" type="button">
+            Open terminal
+          </button>
+          <div class="profile__header">
+            <div class="profile__avatar" aria-hidden="true">K</div>
+            <div>
+              <h1 class="profile__name">kanekiq</h1>
+              <p class="profile__role">Full-stack developer</p>
+            </div>
+          </div>
+          <p class="profile__about">
+            Специализация: разработка модов, игровых систем и UI с упором на
+            производительность и стабильность.
+          </p>
+          <div class="profile__stats">
+            <div class="stat">
+              <span class="stat__value">10+</span>
+              <span class="stat__label">Projects</span>
+            </div>
+            <div class="stat">
+              <span class="stat__value">2</span>
+              <span class="stat__label">Years</span>
+            </div>
+            <div class="stat">
+              <span class="stat__value">24/7</span>
+              <span class="stat__label">Support</span>
+            </div>
+          </div>
+          <div class="profile__actions">
+            <button class="chip" type="button" data-copy="ghouldul">Telegram</button>
+            <button class="chip" type="button" data-copy="gh0ldul777">Discord</button>
+          </div>
+        </div>
+
+        <div class="profile__grid">
+          <div class="panel">
+            <h2 class="panel__title">Services</h2>
+            <ul class="panel__list">
+              <li>Custom game systems</li>
+              <li>Optimization & refactoring</li>
+              <li>UI/UX for game clients</li>
+              <li>Backend API integration</li>
+            </ul>
+          </div>
+          <div class="panel">
+            <h2 class="panel__title">Stack</h2>
+            <div class="panel__tags">
+              <span class="tag">TypeScript</span>
+              <span class="tag">Node.js</span>
+              <span class="tag">React</span>
+              <span class="tag">PostgreSQL</span>
+              <span class="tag">Redis</span>
+              <span class="tag">Lua</span>
+              <span class="tag">JavaScript</span>
+              <span class="tag">Python</span>
+              <span class="tag">C#</span>
+              <span class="tag">C++</span>
+              <span class="tag">MongoDB</span>
+              <span class="tag">MySQL</span>
+              <span class="tag">SQLite</span>
+              <span class="tag">Tailwind</span>
+              <span class="tag">HTML</span>
+              <span class="tag">CSS</span>
+              <span class="tag">PHP</span>
+            </div>
+          </div>
+          <div class="panel">
+            <h2 class="panel__title">Status</h2>
+            <p class="panel__text">
+              Сейчас открыт к новым проектам. Ответ в течение 24 часов.
+            </p>
+            <div class="panel__status">
+              <span class="dot dot--online"></span>
+              Online
+            </div>
+          </div>
+        </div>
+        </section>
+        <div class="toast" id="toast" role="status" aria-live="polite"></div>
+      </div>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
