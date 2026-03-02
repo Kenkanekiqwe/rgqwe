@@ -6,6 +6,7 @@ const redis = new Redis({
 });
 
 const COMMENTS_KEY = "kanekiq:comments";
+const LIKES_KEY = "kanekiq:likes";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,9 +16,18 @@ const corsHeaders = {
 
 export async function GET() {
   try {
-    const data = await redis.get(COMMENTS_KEY);
+    const [data, likesData] = await Promise.all([
+      redis.get(COMMENTS_KEY),
+      redis.hgetall(LIKES_KEY),
+    ]);
     const comments = Array.isArray(data) ? data : [];
-    return new Response(JSON.stringify(comments), {
+    const likesMap = likesData && typeof likesData === "object" ? likesData : {};
+    const merged = comments.map((c, i) => {
+      const id = c.id || `legacy-${i}`;
+      const likes = parseInt(likesMap[id] || "0", 10);
+      return { ...c, id, likes };
+    });
+    return new Response(JSON.stringify(merged), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
@@ -50,9 +60,10 @@ export async function POST(request) {
     }
 
     const comment = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2),
       author,
       text,
-      date: new Date().toLocaleString("ru-RU"),
+      date: new Date().toLocaleString("ru-RU", { timeZone: "Europe/Moscow" }),
     };
 
     const data = await redis.get(COMMENTS_KEY);

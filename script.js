@@ -356,16 +356,78 @@ const API_BASE = "";
 const commentsForm = document.getElementById("comments-form");
 const commentsList = document.getElementById("comments-list");
 
+function getFingerprint() {
+  let fp = localStorage.getItem("kanekiq_fp");
+  if (!fp) {
+    fp = "fp_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem("kanekiq_fp", fp);
+  }
+  return fp;
+}
+
+function getLikedIds() {
+  try {
+    const raw = localStorage.getItem("kanekiq_liked");
+    const arr = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveLikedId(id) {
+  const set = getLikedIds();
+  set.add(id);
+  localStorage.setItem("kanekiq_liked", JSON.stringify([...set]));
+}
+
 function renderComments(comments) {
   if (!commentsList) return;
   commentsList.innerHTML = "";
-  (comments || []).forEach(({ author, text, date }) => {
+  (comments || []).forEach(({ id, author, text, date, likes = 0 }) => {
     const li = document.createElement("li");
     li.className = "comments__item";
     const safeAuthor = String(author || "Аноним").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const safeText = String(text || "").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
-    li.innerHTML = `<div class="comments__author">${safeAuthor}</div><div class="comments__text">${safeText}</div><div class="comments__date">${date || ""}</div>`;
+    const likesNum = parseInt(likes, 10) || 0;
+    const liked = getLikedIds().has(id);
+    li.innerHTML = `
+      <div class="comments__head">
+        <div class="comments__author">${safeAuthor}</div>
+        <button type="button" class="comments__like ${liked ? "is-liked" : ""}" data-id="${id || ""}" aria-label="Лайк">
+          <span class="comments__like-icon">♥</span>
+          <span class="comments__like-count">${likesNum}</span>
+        </button>
+      </div>
+      <div class="comments__text">${safeText}</div>
+      <div class="comments__date">${date || ""}</div>
+    `;
     commentsList.append(li);
+  });
+
+  commentsList.querySelectorAll(".comments__like").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.id;
+      if (!id) return;
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${API_BASE}/api/comments/like`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ commentId: id, fingerprint: getFingerprint() }),
+        });
+        const data = await res.json();
+        if (data.likes !== undefined) {
+          btn.querySelector(".comments__like-count").textContent = data.likes;
+          if (!data.alreadyLiked) saveLikedId(id);
+          btn.classList.add("is-liked");
+        }
+      } catch {
+        if (toast) showToast("Не удалось поставить лайк");
+      } finally {
+        btn.disabled = false;
+      }
+    });
   });
 }
 
