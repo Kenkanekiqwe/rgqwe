@@ -188,7 +188,7 @@ function startSequence() {
   commandInput.setAttribute("disabled", "true");
   commandInput.blur();
   hint.textContent = "";
-  setTimeout(runSteps, 400);
+  setTimeout(runSteps, 700);
 }
 
 function renderTyped(value) {
@@ -215,9 +215,9 @@ function renderTyped(value) {
   }
 
   if (isAppend && value.length > appendFrom) {
-    requestAnimationFrame(() => {
-      const newChars = commandTyped.querySelectorAll(".typed-char.is-new");
-      newChars.forEach((char) => char.classList.add("is-visible"));
+    const newChars = commandTyped.querySelectorAll(".typed-char.is-new");
+    newChars.forEach((char, i) => {
+      setTimeout(() => char.classList.add("is-visible"), i * 35);
     });
   }
 
@@ -350,4 +350,60 @@ if (terminal && terminalHeader) {
     document.addEventListener("mousemove", onPointerMove);
     document.addEventListener("mouseup", endDrag);
   });
+}
+
+const COMMENTS_KEY = "kanekiq_comments";
+const commentsForm = document.getElementById("comments-form");
+const commentsList = document.getElementById("comments-list");
+
+function loadComments() {
+  try {
+    const raw = localStorage.getItem(COMMENTS_KEY);
+    const comments = raw ? JSON.parse(raw) : [];
+    return Array.isArray(comments) ? comments : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveComments(comments) {
+  localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments));
+}
+
+function renderComments() {
+  const comments = loadComments();
+  commentsList.innerHTML = "";
+  comments.forEach(({ author, text, date }) => {
+    const li = document.createElement("li");
+    li.className = "comments__item";
+    const safeAuthor = String(author || "Аноним").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const safeText = String(text || "").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+    li.innerHTML = `<div class="comments__author">${safeAuthor}</div><div class="comments__text">${safeText}</div><div class="comments__date">${date || ""}</div>`;
+    commentsList.append(li);
+  });
+}
+
+if (commentsForm && commentsList) {
+  commentsForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const fd = new FormData(commentsForm);
+    const author = (fd.get("author") || "").trim();
+    const text = (fd.get("text") || "").trim();
+    if (!author || !text) {
+      return;
+    }
+    const comments = loadComments();
+    comments.unshift({
+      author,
+      text,
+      date: new Date().toLocaleString("ru-RU"),
+    });
+    saveComments(comments);
+    renderComments();
+    commentsForm.reset();
+    if (toast) {
+      showToast("Комментарий добавлен");
+    }
+  });
+  renderComments();
 }

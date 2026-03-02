@@ -139,6 +139,31 @@
             </div>
           </div>
         </div>
+
+        <section class="comments" aria-label="Комментарии">
+          <div class="panel comments__panel">
+            <h2 class="panel__title">Комментарии</h2>
+            <form class="comments__form" id="comments-form">
+              <input
+                type="text"
+                name="author"
+                class="comments__input"
+                placeholder="Ваше имя"
+                required
+                autocomplete="name"
+              />
+              <textarea
+                name="text"
+                class="comments__textarea"
+                placeholder="Ваш комментарий..."
+                rows="3"
+                required
+              ></textarea>
+              <button type="submit" class="comments__submit">Отправить</button>
+            </form>
+            <ul class="comments__list" id="comments-list"></ul>
+          </div>
+        </section>
         </section>
         <div class="toast" id="toast" role="status" aria-live="polite"></div>
       </div>
