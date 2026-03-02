@@ -352,28 +352,14 @@ if (terminal && terminalHeader) {
   });
 }
 
-const COMMENTS_KEY = "kanekiq_comments";
+const API_BASE = "";
 const commentsForm = document.getElementById("comments-form");
 const commentsList = document.getElementById("comments-list");
 
-function loadComments() {
-  try {
-    const raw = localStorage.getItem(COMMENTS_KEY);
-    const comments = raw ? JSON.parse(raw) : [];
-    return Array.isArray(comments) ? comments : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveComments(comments) {
-  localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments));
-}
-
-function renderComments() {
-  const comments = loadComments();
+function renderComments(comments) {
+  if (!commentsList) return;
   commentsList.innerHTML = "";
-  comments.forEach(({ author, text, date }) => {
+  (comments || []).forEach(({ author, text, date }) => {
     const li = document.createElement("li");
     li.className = "comments__item";
     const safeAuthor = String(author || "Аноним").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -383,27 +369,49 @@ function renderComments() {
   });
 }
 
+async function fetchComments() {
+  try {
+    const res = await fetch(`${API_BASE}/api/comments`);
+    const data = await res.json();
+    renderComments(Array.isArray(data) ? data : []);
+  } catch {
+    renderComments([]);
+    if (toast) showToast("Не удалось загрузить комментарии");
+  }
+}
+
 if (commentsForm && commentsList) {
-  commentsForm.addEventListener("submit", (event) => {
+  commentsForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     const fd = new FormData(commentsForm);
     const author = (fd.get("author") || "").trim();
     const text = (fd.get("text") || "").trim();
-    if (!author || !text) {
-      return;
-    }
-    const comments = loadComments();
-    comments.unshift({
-      author,
-      text,
-      date: new Date().toLocaleString("ru-RU"),
-    });
-    saveComments(comments);
-    renderComments();
-    commentsForm.reset();
-    if (toast) {
-      showToast("Комментарий добавлен");
+    if (!author || !text) return;
+
+    const submitBtn = commentsForm.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Отправка...";
+
+    try {
+      const res = await fetch(`${API_BASE}/api/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ author, text }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Ошибка");
+      }
+      commentsForm.reset();
+      await fetchComments();
+      if (toast) showToast("Комментарий добавлен");
+    } catch (err) {
+      if (toast) showToast(err.message || "Не удалось отправить");
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Отправить";
     }
   });
-  renderComments();
+
+  fetchComments();
 }
