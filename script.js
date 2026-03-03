@@ -184,9 +184,14 @@ function startSequence() {
     commandInput.focus();
     return;
   }
+  if (value.replace(/\s+/g, " ") !== "npm run build") {
+    if (toast) showToast("Нужно ввести: npm run build");
+    hint.textContent = "Команда должна быть: npm run build";
+    commandInput.focus();
+    return;
+  }
   hasStarted = true;
   commandInput.setAttribute("disabled", "true");
-  commandInput.blur();
   hint.textContent = "";
   setTimeout(runSteps, 700);
 }

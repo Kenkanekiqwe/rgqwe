@@ -14,18 +14,41 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
+function fnv1a(str) {
+  let hash = 2166136261;
+  for (let i = 0; i < str.length; i += 1) {
+    hash ^= str.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(36);
+}
+
 export async function GET() {
   try {
     const [data, likesData] = await Promise.all([
       redis.get(COMMENTS_KEY),
       redis.hgetall(LIKES_KEY),
     ]);
-    const comments = Array.isArray(data) ? data : [];
+    const storedComments = Array.isArray(data) ? data : [];
     const likesMap = likesData && typeof likesData === "object" ? likesData : {};
-    const merged = comments.map((c, i) => {
-      const id = c.id || `legacy-${i}`;
-      const likes = parseInt(likesMap[id] || "0", 10);
-      return { ...c, id, likes };
+    let changed = false;
+
+    const normalized = storedComments.map((c) => {
+      if (c && typeof c === "object" && c.id) return c;
+      const base = `${c?.author ?? ""}|${c?.text ?? ""}|${c?.date ?? ""}`;
+      const id = `c_${fnv1a(base)}`;
+      changed = true;
+      return { ...(c && typeof c === "object" ? c : {}), id };
+    });
+
+    if (changed) {
+      await redis.set(COMMENTS_KEY, normalized);
+    }
+
+    const merged = normalized.map((c) => {
+      const id = c.id;
+      const likes = parseInt(likesMap[id] || "0", 10) || 0;
+      return { ...c, likes };
     });
     return new Response(JSON.stringify(merged), {
       status: 200,
