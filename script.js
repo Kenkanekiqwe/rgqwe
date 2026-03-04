@@ -12,6 +12,13 @@ const profile = document.querySelector(".profile");
 const toast = document.getElementById("toast");
 const terminalHeader = document.querySelector(".terminal__header");
 const openTerminalBtn = document.getElementById("open-terminal-btn");
+const gallery = document.getElementById("gallery");
+const galleryImgs = [
+  document.getElementById("gallery-img-1"),
+  document.getElementById("gallery-img-2"),
+  document.getElementById("gallery-img-3"),
+];
+let galleryAudio = null;
 
 const steps = [
   { text: "Scanning project tree...", type: "muted", icon: ">" },
@@ -32,6 +39,7 @@ let previousValue = "";
 let toastTimer = null;
 let shellMode = false;
 let buildFinished = false;
+let galleryAudioSrc = null;
 
 function addLogLine({ text, type, icon }) {
   const line = document.createElement("div");
@@ -118,6 +126,13 @@ const shellCommands = {
     description: "Текущая дата и время",
     run: () => [new Date().toLocaleString("ru-RU")],
   },
+  pizda: {
+    description: "Запуск спец-галереи",
+    run: () => {
+      startGallery();
+      return ["Launching gallery from src/ ..."];
+    },
+  },
   clear: {
     description: "Очистить терминал",
     run: () => {
@@ -173,6 +188,90 @@ function openTerminalShell() {
   terminal.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px)`;
   addLogLine({ text: "kanekiq shell initialized", type: "success", icon: "✓" });
   addLogLine({ text: "Введите --help для просмотра команд", type: "muted", icon: ">" });
+}
+
+function startGallery() {
+  if (!gallery || galleryImgs.some((img) => !img)) {
+    return;
+  }
+
+  gallery.classList.remove("gallery--hidden");
+
+  const imgExts = ["jpeg", "jpg", "png", "webp", "gif"];
+  const audioExts = ["mp3", "ogg", "wav"];
+
+  function setWithFallback(el, basePath, exts) {
+    return new Promise((resolve) => {
+      let idx = 0;
+      const tryNext = () => {
+        if (idx >= exts.length) {
+          resolve({ ok: false, tried: exts.map((e) => `${basePath}.${e}`) });
+          return;
+        }
+        const candidate = `${basePath}.${exts[idx]}`;
+        idx += 1;
+        el.onerror = () => tryNext();
+        el.onload = () => resolve({ ok: true, src: candidate });
+        el.src = candidate;
+      };
+      tryNext();
+    });
+  }
+
+  galleryImgs.forEach((img) => img.classList.remove("is-visible"));
+
+  const imgBases = ["src/1", "src/2", "src/3"];
+  imgBases.forEach(async (base, index) => {
+    const res = await setWithFallback(galleryImgs[index], base, imgExts);
+    if (!res.ok) {
+      if (toast) showToast("Картинки не найдены в папке src");
+      return;
+    }
+    setTimeout(() => galleryImgs[index].classList.add("is-visible"), index * 300);
+  });
+
+  const audioBase = "src/music";
+  let audioIdx = 0;
+  const tryAudio = () => {
+    if (audioIdx >= audioExts.length) {
+      if (toast) showToast("Музыка не найдена в папке src");
+      return;
+    }
+    const candidate = `${audioBase}.${audioExts[audioIdx]}`;
+    audioIdx += 1;
+
+    if (!galleryAudio) {
+      galleryAudio = new Audio();
+      galleryAudio.loop = true;
+      galleryAudio.preload = "auto";
+      galleryAudio.volume = 0.7;
+    }
+
+    if (galleryAudioSrc === candidate) {
+      if (galleryAudio.paused) {
+        galleryAudio.play().catch(() => {
+          if (toast) showToast("Нажми мышкой по странице чтобы включить музыку");
+        });
+      } else {
+        galleryAudio.pause();
+      }
+      return;
+    }
+
+    galleryAudio.pause();
+    galleryAudioSrc = candidate;
+    galleryAudio.onerror = () => tryAudio();
+    galleryAudio.oncanplay = () => {
+      galleryAudio.currentTime = 0;
+      galleryAudio.play().catch(() => {
+        if (toast) showToast("Нажми мышкой по странице чтобы включить музыку");
+      });
+    };
+    galleryAudio.src = candidate;
+    galleryAudio.load();
+  };
+
+  tryAudio();
 }
 
 function startSequence() {

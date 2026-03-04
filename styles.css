@@ -691,3 +691,39 @@ body {
   font-size: 11px;
   color: #64748b;
 }
+
+.gallery {
+  margin-top: 24px;
+}
+
+.gallery__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.gallery__row {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.gallery__img {
+  width: min(220px, 30vw);
+  border-radius: 12px;
+  object-fit: cover;
+  opacity: 0;
+  transform: translateY(10px) scale(0.97);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  box-shadow: 0 18px 30px rgba(0, 0, 0, 0.55);
+}
+
+.gallery__img.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.gallery--hidden {
+  display: none;
+}
