@@ -724,6 +724,14 @@ body {
   transform: translateY(0) scale(1);
 }
 
+.gallery__audio {
+  width: min(720px, 100%);
+  margin: 6px auto 0;
+  display: block;
+  filter: invert(1) hue-rotate(180deg) saturate(1.2);
+  opacity: 0.92;
+}
+
 .gallery--hidden {
   display: none;
 }

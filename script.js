@@ -18,7 +18,7 @@ const galleryImgs = [
   document.getElementById("gallery-img-2"),
   document.getElementById("gallery-img-3"),
 ];
-let galleryAudio = null;
+const galleryAudioEl = document.getElementById("gallery-audio");
 
 const steps = [
   { text: "Scanning project tree...", type: "muted", icon: ">" },
@@ -240,35 +240,18 @@ function startGallery() {
     const candidate = `${audioBase}.${audioExts[audioIdx]}`;
     audioIdx += 1;
 
-    if (!galleryAudio) {
-      galleryAudio = new Audio();
-      galleryAudio.loop = true;
-      galleryAudio.preload = "auto";
-      galleryAudio.volume = 0.7;
-    }
-
-    if (galleryAudioSrc === candidate) {
-      if (galleryAudio.paused) {
-        galleryAudio.play().catch(() => {
-          if (toast) showToast("Нажми мышкой по странице чтобы включить музыку");
-        });
-      } else {
-        galleryAudio.pause();
-      }
+    if (!galleryAudioEl) {
       return;
     }
 
-    galleryAudio.pause();
+    if (galleryAudioSrc === candidate) {
+      return;
+    }
+
     galleryAudioSrc = candidate;
-    galleryAudio.onerror = () => tryAudio();
-    galleryAudio.oncanplay = () => {
-      galleryAudio.currentTime = 0;
-      galleryAudio.play().catch(() => {
-        if (toast) showToast("Нажми мышкой по странице чтобы включить музыку");
-      });
-    };
-    galleryAudio.src = candidate;
-    galleryAudio.load();
+    galleryAudioEl.onerror = () => tryAudio();
+    galleryAudioEl.src = candidate;
+    galleryAudioEl.load();
   };
 
   tryAudio();
